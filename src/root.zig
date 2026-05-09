@@ -1,4 +1,5 @@
-const windowing = @import("window.zig");
+pub const windowing = @import("window.zig");
 
 /// Widgets
-const widget = @import("./widgets/widget.zig");
+pub const widget = @import("./widgets/widget.zig");
+pub const widget_collection = @import("./widgets/widget_collection.zig");
