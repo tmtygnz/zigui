@@ -38,6 +38,15 @@ pub const Widget = struct {
 
     /// This function calls the component's (not the widget) event callback function.
     pub fn window_event_callback(self: *Self, event: [*c]const saap.Event) void {
+        const e = event.*;
+        if (self.hovering and e.mouse_button == saap.Mousebutton.LEFT and e.type == saap.EventType.MOUSE_DOWN) {
+            self.pressed = true;
+        }
+        if (self.pressed and e.mouse_button == saap.Mousebutton.LEFT and e.type == saap.EventType.MOUSE_UP) {
+            self.pressed = false;
+        }
+
+        // Call components event callback for component specific handlers.
         self.event_callback(self.component_context, self, event);
     }
 

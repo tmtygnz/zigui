@@ -8,6 +8,7 @@ pub const ButtonWidgetOptions = struct {
     dimensions: @Vector(2, f32) = .{ 100.0, 100.0 },
     padding: @Vector(2, f32) = .{ 4.0, 2.0 },
     content: ButtonWidgetContent,
+    position: @Vector(2, f32) = .{ 0.0, 0.0 },
 };
 
 pub const ButtonWidgetContent = union(enum) {
@@ -18,6 +19,7 @@ pub const ButtonWidget = struct {
     dimensions: @Vector(2, f32),
     padding: @Vector(2, f32),
     content: ButtonWidgetContent,
+    position: @Vector(2, f32),
 
     const Self = @This();
 
@@ -26,6 +28,7 @@ pub const ButtonWidget = struct {
             .dimensions = options.dimensions,
             .padding = options.padding,
             .content = options.content,
+            .position = options.position,
         };
     }
 
@@ -40,7 +43,7 @@ pub const ButtonWidget = struct {
     pub fn getWidget(self: *Self) widget.Widget {
         var widg = widget.Widget.init(.{
             .bbox_dimensions = .{ 0.0, 0.0 },
-            .position = .{ 0.0, 0.0 },
+            .position = self.position,
             .render_callback = Self.render,
             .component_context = self,
             .event_callback = Self.event_callback,
@@ -60,6 +63,10 @@ pub const ButtonWidget = struct {
             sgl.c4f(0.2, 0.6, 1.0, 1.0);
         } else {
             sgl.c4f(0.6, 0.6, 1.0, 1.0);
+        }
+
+        if (parent_widget.pressed) {
+            sgl.c4f(0.1, 0.2, 0.3, 1.0);
         }
 
         sgl.v2f(x, y);
