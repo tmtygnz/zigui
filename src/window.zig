@@ -82,9 +82,11 @@ pub const WindowInstance = struct {
 
         sg.beginPass(.{ .action = pass_action, .swapchain = sokol.glue.swapchain() });
 
+        sgl.beginQuads();
         for (self.components.items) |*component| {
             component.*.render_step(self.mouse_position);
         }
+        sgl.end();
 
         sgl.draw();
         sg.endPass();
@@ -104,6 +106,10 @@ pub const WindowInstance = struct {
             self.mouse_down = false;
         } else {
             self.mouse_down = false;
+        }
+
+        for (self.components.items) |*component| {
+            component.window_event_callback(event);
         }
     }
 

@@ -1,11 +1,14 @@
 const std = @import("std");
+const sokol = @import("sokol");
+const saap = sokol.app;
 const widget_collection = @import("widget_collection.zig");
 
 pub const WidgetOptions = struct {
     position: @Vector(2, f32),
     bbox_dimensions: @Vector(2, f32),
-    render_callback: *const fn (ctx: *anyopaque, widget: *Widget) void,
-    render_context: *anyopaque,
+    render_callback: *const fn (ctx: *anyopaque, widget: *Widget) void, // Component's function that handles rendering.
+    component_context: *anyopaque, // Component's self.
+    event_callback: *const fn (ctx: *anyopaque, widget: *Widget, event: [*c]const saap.Event) void, // Component's function that handles event.
 };
 
 pub const Widget = struct {
@@ -16,7 +19,10 @@ pub const Widget = struct {
     pressed: bool = false,
 
     render_callback: *const fn (ctx: *anyopaque, widget: *Widget) void,
-    render_context: *anyopaque,
+    component_context: *anyopaque,
+
+    /// Will be called inside the `sokol_event` function within the windowing struct.
+    event_callback: *const fn (ctx: *anyopaque, widget: *Widget, event: [*c]const saap.Event) void,
 
     const Self = @This();
 
@@ -25,17 +31,27 @@ pub const Widget = struct {
             .position = widgetOptions.position,
             .bbox_dimensions = widgetOptions.bbox_dimensions,
             .render_callback = widgetOptions.render_callback,
-            .render_context = widgetOptions.render_context,
+            .component_context = widgetOptions.component_context,
+            .event_callback = widgetOptions.event_callback,
         };
     }
 
+    /// This function calls the component's (not the widget) event callback function.
+    pub fn window_event_callback(self: *Self, event: [*c]const saap.Event) void {
+        self.event_callback(self.component_context, self, event);
+    }
+
+    /// This function changes the bounding box size used to determine focus state of the widget.
     pub fn set_bbox_size(self: *Self, size: @Vector(2, f32)) void {
         self.bbox_dimensions = size;
     }
 
+    /// This function renders the component.
+    /// The function calls the check mouse collision first to update the widget state
+    /// then passes it to the `render_callback` function of the component with the current widget state.
     pub fn render_step(self: *Self, mouse_position: @Vector(2, f32)) void {
         self.check_mouse_collisions(mouse_position);
-        self.render_callback(self.render_context, self);
+        self.render_callback(self.component_context, self);
     }
 
     // Checks wether mouse cursor is within the minimum and maximum

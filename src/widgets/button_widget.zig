@@ -1,6 +1,7 @@
 const std = @import("std");
 const sokol = @import("sokol");
 const sgl = sokol.gl;
+const saap = sokol.app;
 const widget = @import("./widget.zig");
 
 pub const ButtonWidgetOptions = struct {
@@ -28,12 +29,21 @@ pub const ButtonWidget = struct {
         };
     }
 
+    pub fn event_callback(selfPtr: *anyopaque, widg: *widget.Widget, event: [*c]const saap.Event) void {
+        const self: *Self = @ptrCast(@alignCast(selfPtr));
+        _ = self;
+        _ = widg;
+        _ = event;
+        std.debug.print("Event called \n", .{});
+    }
+
     pub fn getWidget(self: *Self) widget.Widget {
         var widg = widget.Widget.init(.{
             .bbox_dimensions = .{ 0.0, 0.0 },
             .position = .{ 0.0, 0.0 },
             .render_callback = Self.render,
-            .render_context = self,
+            .component_context = self,
+            .event_callback = Self.event_callback,
         });
         widg.set_bbox_size(self.dimensions);
         return widg;
@@ -46,18 +56,15 @@ pub const ButtonWidget = struct {
         const w = self.dimensions[0];
         const h = self.dimensions[1];
 
-        std.debug.print("Rendering", .{});
-
-        sgl.beginQuads();
         if (parent_widget.hovering) {
             sgl.c4f(0.2, 0.6, 1.0, 1.0);
         } else {
             sgl.c4f(0.6, 0.6, 1.0, 1.0);
         }
+
         sgl.v2f(x, y);
         sgl.v2f(x, y + h);
         sgl.v2f(x + w, y + h);
         sgl.v2f(x + w, y);
-        sgl.end();
     }
 };
