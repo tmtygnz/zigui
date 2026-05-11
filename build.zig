@@ -9,9 +9,25 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const truetype_dependency = b.dependency("TrueType", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Mods
-    const mod = b.addModule("zigui", .{ .root_source_file = b.path("src/root.zig"), .target = target });
+    const mod = b.addModule("zigui", .{
+        .root_source_file = b.path("src/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
     mod.addImport("sokol", sokol_dependency.module("sokol"));
+    mod.addImport("TrueType", truetype_dependency.module("TrueType"));
+    mod.addCSourceFile(.{
+        .file = b.path("deps/libschrift/schrift.c"),
+        .flags = &[_][]const u8{ "-std=c99", "-O3" },
+    });
+    mod.addIncludePath(b.path("deps/libschrift/"));
 
     // Executable
     const exe = b.addExecutable(.{
@@ -20,6 +36,7 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("src/main.zig"),
             .target = target,
             .optimize = optimize,
+            .link_libc = true,
         }),
     });
     exe.root_module.addImport("zigui", mod);

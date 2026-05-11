@@ -1,12 +1,15 @@
 const std = @import("std");
 const Io = std.Io;
-
 const zigui = @import("zigui");
 
-pub fn main() !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    const allocator = gpa.allocator();
-    var window = zigui.windowing.WindowInstance.init(1280, 800, "Hello World", allocator);
+pub fn main(init: std.process.Init) !void {
+    // var gpa: std.heap.DebugAllocator(.{}) = .init;
+    // const allocator = gpa.allocator();
+    var ff = try zigui.widget_collection.labelWidget.FontProvider.init(init.gpa, 15);
+    try ff.generate_atlas();
+    try ff.consolidateGlyphsToAtlas();
+
+    var window = zigui.windowing.WindowInstance.init(1280, 800, "Hello World", init.gpa, init.io);
 
     var button = zigui.widget_collection.buttonWidget.ButtonWidget.init(.{
         .content = .{ .text = "hello world" },
@@ -14,14 +17,7 @@ pub fn main() !void {
     });
     const buttonWidget = button.getWidget();
 
-    var button2 = zigui.widget_collection.buttonWidget.ButtonWidget.init(.{
-        .content = .{ .text = "hello world" },
-        .position = .{ 300.0, 50.0 },
-    });
-    const buttonWidget2 = button2.getWidget();
-
     try window.addComponent(buttonWidget);
-    try window.addComponent(buttonWidget2);
 
     window.run();
 }

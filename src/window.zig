@@ -4,6 +4,7 @@ const sg = sokol.gfx;
 const sgl = sokol.gl;
 const std = @import("std");
 const widget = @import("./widgets/widget.zig");
+const fonts = @import("widgets/label_widget.zig").FontProvider;
 
 pub const WindowInstance = struct {
     width: i32,
@@ -14,8 +15,13 @@ pub const WindowInstance = struct {
     mouse_position: @Vector(2, f32),
     mouse_down: bool = false,
 
+    // Components
     components: std.ArrayListUnmanaged(widget.Widget) = .empty,
     component_allocator: std.mem.Allocator,
+    font_provider: fonts,
+
+    // Io
+    Io: std.Io,
 
     const Self = @This();
 
@@ -23,13 +29,22 @@ pub const WindowInstance = struct {
     ///
     /// This functions sets up all of the necessary information to create a window
     /// it will return a WindowInstance where in `WindowInstance.run` can be called to start the application loop.
-    pub fn init(initial_width: i32, initial_height: i32, title: [*c]const u8, allocator: std.mem.Allocator) Self {
+    pub fn init(
+        initial_width: i32,
+        initial_height: i32,
+        title: [*c]const u8,
+        allocator: std.mem.Allocator,
+        io: std.Io,
+        font_prov: fonts,
+    ) Self {
         return .{
             .width = initial_width,
             .height = initial_height,
             .title = title,
             .mouse_position = .{ 0.0, 0.0 },
             .component_allocator = allocator,
+            .Io = io,
+            .font_provider = font_prov,
         };
     }
 
