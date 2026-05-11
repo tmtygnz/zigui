@@ -183,7 +183,7 @@ pub const FontProvider = struct {
             .label = "font-atlas",
         };
 
-        img_desc.data.mip_levels[0][0] = .{
+        img_desc.data.mip_levels[0] = .{
             .ptr = master_atlas_buffer.ptr,
             .size = master_atlas_buffer.len,
         };

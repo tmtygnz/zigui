@@ -18,7 +18,7 @@ pub const WindowInstance = struct {
     // Components
     components: std.ArrayListUnmanaged(widget.Widget) = .empty,
     component_allocator: std.mem.Allocator,
-    font_provider: fonts,
+    font_provider: ?fonts = undefined,
 
     // Io
     Io: std.Io,
@@ -35,7 +35,6 @@ pub const WindowInstance = struct {
         title: [*c]const u8,
         allocator: std.mem.Allocator,
         io: std.Io,
-        font_prov: fonts,
     ) Self {
         return .{
             .width = initial_width,
@@ -44,7 +43,6 @@ pub const WindowInstance = struct {
             .mouse_position = .{ 0.0, 0.0 },
             .component_allocator = allocator,
             .Io = io,
-            .font_provider = font_prov,
         };
     }
 
@@ -72,10 +70,26 @@ pub const WindowInstance = struct {
 
     // Call once by sokol at startup.
     fn sokol_init() callconv(.c) void {
+        const self: *Self = @ptrCast(@alignCast(sapp.userdata()));
+
         sg.setup(.{
             .environment = sokol.glue.environment(),
         });
         sgl.setup(.{});
+
+        self.font_provider = fonts.init(self.component_allocator, 24.0) catch |err| {
+            std.debug.print("Failed to init font provider: {}\n", .{err});
+            return;
+        };
+
+        if (self.font_provider) |*fp| {
+            fp.generate_atlas() catch |err| {
+                std.debug.print("Failed to generate atlas: {}\n", .{err});
+            };
+            fp.consolidateGlyphsToAtlas() catch |err| {
+                std.debug.print("Failed to consolidate atlas: {}\n", .{err});
+            };
+        }
     }
 
     // Function called every frame.
