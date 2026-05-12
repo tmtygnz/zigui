@@ -4,7 +4,16 @@ const sg = sokol.gfx;
 const sgl = sokol.gl;
 const std = @import("std");
 const widget = @import("./widgets/widget.zig");
-const fonts = @import("widgets/label_widget.zig").FontProvider;
+const texts = @import("widgets/label_widget.zig");
+
+pub const WindowInstanceOptions = struct {
+    initial_width: i32,
+    initial_height: i32,
+    title: [*c]const u8,
+    allocator: std.mem.Allocator,
+    io: std.Io,
+    app_font: *texts.FontProvider,
+};
 
 pub const WindowInstance = struct {
     width: i32,
@@ -18,7 +27,7 @@ pub const WindowInstance = struct {
     // Components
     components: std.ArrayListUnmanaged(widget.Widget) = .empty,
     component_allocator: std.mem.Allocator,
-    font_provider: ?fonts = undefined,
+    app_font: *texts.FontProvider,
 
     // Io
     Io: std.Io,
@@ -29,20 +38,15 @@ pub const WindowInstance = struct {
     ///
     /// This functions sets up all of the necessary information to create a window
     /// it will return a WindowInstance where in `WindowInstance.run` can be called to start the application loop.
-    pub fn init(
-        initial_width: i32,
-        initial_height: i32,
-        title: [*c]const u8,
-        allocator: std.mem.Allocator,
-        io: std.Io,
-    ) Self {
+    pub fn init(options: WindowInstanceOptions) Self {
         return .{
-            .width = initial_width,
-            .height = initial_height,
-            .title = title,
+            .width = options.initial_width,
+            .height = options.initial_height,
+            .title = options.title,
             .mouse_position = .{ 0.0, 0.0 },
-            .component_allocator = allocator,
-            .Io = io,
+            .component_allocator = options.allocator,
+            .Io = options.io,
+            .app_font = options.app_font,
         };
     }
 
@@ -71,25 +75,17 @@ pub const WindowInstance = struct {
     // Call once by sokol at startup.
     fn sokol_init() callconv(.c) void {
         const self: *Self = @ptrCast(@alignCast(sapp.userdata()));
-
         sg.setup(.{
             .environment = sokol.glue.environment(),
         });
         sgl.setup(.{});
 
-        self.font_provider = fonts.init(self.component_allocator, 24.0) catch |err| {
-            std.debug.print("Failed to init font provider: {}\n", .{err});
+        self.app_font.rasterizeGlyphs() catch {
             return;
         };
-
-        if (self.font_provider) |*fp| {
-            fp.generate_atlas() catch |err| {
-                std.debug.print("Failed to generate atlas: {}\n", .{err});
-            };
-            fp.consolidateGlyphsToAtlas() catch |err| {
-                std.debug.print("Failed to consolidate atlas: {}\n", .{err});
-            };
-        }
+        self.app_font.consolidateGlyphsToAtlas() catch {
+            return;
+        };
     }
 
     // Function called every frame.
@@ -111,11 +107,9 @@ pub const WindowInstance = struct {
 
         sg.beginPass(.{ .action = pass_action, .swapchain = sokol.glue.swapchain() });
 
-        sgl.beginQuads();
         for (self.components.items) |*component| {
             component.*.render_step(self.mouse_position);
         }
-        sgl.end();
 
         sgl.draw();
         sg.endPass();

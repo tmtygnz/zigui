@@ -1,6 +1,6 @@
 const std = @import("std");
 const sokol = @import("sokol");
-const saap = sokol.app;
+const sapp = sokol.app;
 const widget_collection = @import("widget_collection.zig");
 
 pub const WidgetOptions = struct {
@@ -8,7 +8,7 @@ pub const WidgetOptions = struct {
     bbox_dimensions: @Vector(2, f32),
     render_callback: *const fn (ctx: *anyopaque, widget: *Widget) void, // Component's function that handles rendering.
     component_context: *anyopaque, // Component's self.
-    event_callback: *const fn (ctx: *anyopaque, widget: *Widget, event: [*c]const saap.Event) void, // Component's function that handles event.
+    event_callback: *const fn (ctx: *anyopaque, widget: *Widget, event: [*c]const sapp.Event) void, // Component's function that handles event.
 };
 
 pub const Widget = struct {
@@ -22,7 +22,7 @@ pub const Widget = struct {
     component_context: *anyopaque,
 
     /// Will be called inside the `sokol_event` function within the windowing struct.
-    event_callback: *const fn (ctx: *anyopaque, widget: *Widget, event: [*c]const saap.Event) void,
+    event_callback: *const fn (ctx: *anyopaque, widget: *Widget, event: [*c]const sapp.Event) void,
 
     const Self = @This();
 
@@ -37,12 +37,12 @@ pub const Widget = struct {
     }
 
     /// This function calls the component's (not the widget) event callback function.
-    pub fn window_event_callback(self: *Self, event: [*c]const saap.Event) void {
+    pub fn window_event_callback(self: *Self, event: [*c]const sapp.Event) void {
         const e = event.*;
-        if (self.hovering and e.mouse_button == saap.Mousebutton.LEFT and e.type == saap.EventType.MOUSE_DOWN) {
+        if (self.hovering and e.mouse_button == sapp.Mousebutton.LEFT and e.type == sapp.EventType.MOUSE_DOWN) {
             self.pressed = true;
         }
-        if (self.pressed and e.mouse_button == saap.Mousebutton.LEFT and e.type == saap.EventType.MOUSE_UP) {
+        if (self.pressed and e.mouse_button == sapp.Mousebutton.LEFT and e.type == sapp.EventType.MOUSE_UP) {
             self.pressed = false;
         }
 
