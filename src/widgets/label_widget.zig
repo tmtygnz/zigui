@@ -256,8 +256,8 @@ pub const FontProvider = struct {
 
         std.debug.print("Creating Sokol Sampler...\n", .{});
         self.sampler = sg.makeSampler(.{
-            .min_filter = .LINEAR,
-            .mag_filter = .LINEAR,
+            .min_filter = .NEAREST,
+            .mag_filter = .NEAREST,
         });
         std.debug.print("Sokol Sampler created: {d}\n", .{self.sampler.id});
 
